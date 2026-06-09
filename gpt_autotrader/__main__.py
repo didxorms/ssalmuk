@@ -11,6 +11,7 @@ from .bot import AutoTrader, setup_logger
 from .config import load_config
 
 SIGNAL_CHOICES = ("all", "active", "buy", "sell", "hold")
+TRADE_PHASE_CHOICES = ("both", "sell", "buy")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -27,6 +28,12 @@ def build_parser() -> argparse.ArgumentParser:
     trade.add_argument("--config", default="config.yaml")
     trade.add_argument("--once", action="store_true", help="run once and exit")
     trade.add_argument("--interval-seconds", type=int, default=900, help="loop interval when --once is not set")
+    trade.add_argument(
+        "--phase",
+        choices=TRADE_PHASE_CHOICES,
+        default="both",
+        help="which side of trading to execute: both, sell only, or buy only",
+    )
     add_output_args(trade)
 
     bt = sub.add_parser("backtest", help="simple single-symbol backtest using Alpaca historical bars")
@@ -248,10 +255,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "trade":
         bot = AutoTrader(cfg, logger=logger)
         if args.once:
-            decisions = bot.run_once(scan_only=False)
+            decisions = bot.run_once(scan_only=False, phase=args.phase)
             print_signal_table(decisions, top=args.top, signal_filter=args.signals, plain=args.plain)
         else:
-            bot.run_loop(args.interval_seconds)
+            bot.run_loop(args.interval_seconds, phase=args.phase)
         return 0
 
     if args.command == "backtest":

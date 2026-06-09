@@ -54,6 +54,31 @@ class AlpacaBroker:
             )
         return positions
 
+    def get_symbols_sold_today(self) -> set[str]:
+        from alpaca.trading.enums import OrderSide, QueryOrderStatus
+        from alpaca.trading.requests import GetOrdersRequest
+
+        market_now = datetime.now(ZoneInfo("America/New_York"))
+        after = market_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        request = GetOrdersRequest(
+            status=QueryOrderStatus.ALL,
+            after=after,
+            side=OrderSide.SELL,
+            limit=500,
+        )
+        orders = self.trading.get_orders(request)
+
+        ignored_statuses = {"canceled", "expired", "rejected"}
+        result: set[str] = set()
+        for order in orders:
+            status = str(getattr(getattr(order, "status", ""), "value", getattr(order, "status", ""))).lower()
+            if status in ignored_statuses:
+                continue
+            symbol = str(getattr(order, "symbol", "")).upper().strip()
+            if symbol:
+                result.add(symbol)
+        return result
+
     def is_market_open(self) -> bool:
         clock = self.trading.get_clock()
         return bool(clock.is_open)

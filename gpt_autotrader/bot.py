@@ -27,17 +27,17 @@ class AutoTrader:
         self.broker = AlpacaBroker(api_key, secret_key, paper=cfg.paper, data_feed=cfg.data_feed)
         self.state = StateStore(cfg.state_file)
 
-    def run_loop(self, interval_seconds: int) -> None:
+    def run_loop(self, interval_seconds: int, phase: str = "both") -> None:
         while True:
             try:
-                self.run_once(scan_only=False)
+                self.run_once(scan_only=False, phase=phase)
             except KeyboardInterrupt:
                 raise
             except Exception:
                 self.logger.exception("run_once failed")
             time.sleep(max(10, interval_seconds))
 
-    def run_once(self, scan_only: bool = False, held_only: bool = False) -> list[StrategyDecision]:
+    def run_once(self, scan_only: bool = False, held_only: bool = False, phase: str = "both") -> list[StrategyDecision]:
         cfg = self.cfg
         account = self.broker.get_account()
         state = self.state.ensure_market_day(account.equity)
@@ -100,7 +100,15 @@ class AutoTrader:
             self.logger.error("%s", risk.reason)
             return decisions
 
-        submitted_sell_symbols = self._execute_sells(decisions, positions_by_symbol)
+        submitted_sell_symbols: set[str] = set()
+        if phase in {"both", "sell"}:
+            submitted_sell_symbols = self._execute_sells(decisions, positions_by_symbol)
+        else:
+            self.logger.info("SELL phase skipped")
+
+        if phase not in {"both", "buy"}:
+            self.logger.info("BUY phase skipped")
+            return decisions
 
         # Refresh account/positions after possible sells.
         account, positions = self._refresh_after_sells(submitted_sell_symbols)
@@ -214,6 +222,12 @@ class AutoTrader:
             for symbol in last_trade_at
             if str(last_trade_side.get(symbol, "")).lower() == "buy"
         }
+        try:
+            sold_today_symbols = self.broker.get_symbols_sold_today()
+        except Exception as exc:
+            self.logger.warning("BUY skipped: could not load today's Alpaca sell history: %s", exc)
+            return
+
         reserved_symbols = recent_buy_symbols - set(positions_by_symbol)
         open_position_count = sum(1 for p in positions if p.qty > 0 and p.market_value > 0) + len(reserved_symbols)
         available_slots = max(0, cfg.max_open_positions - open_position_count)
@@ -223,6 +237,8 @@ class AutoTrader:
 
         if reserved_symbols:
             self.logger.info("BUY reserved slots for recent submitted orders: %s", ", ".join(sorted(reserved_symbols)))
+        if sold_today_symbols:
+            self.logger.info("BUY blocked for symbols sold today: %s", ", ".join(sorted(sold_today_symbols)))
 
         candidates = [
             d
@@ -231,6 +247,7 @@ class AutoTrader:
                 d.signal == Signal.BUY
                 and d.symbol.upper() not in positions_by_symbol
                 and d.symbol.upper() not in reserved_symbols
+                and d.symbol.upper() not in sold_today_symbols
             )
         ]
         candidates.sort(key=lambda x: x.score, reverse=True)
