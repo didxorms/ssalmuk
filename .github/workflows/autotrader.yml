@@ -2,6 +2,16 @@ name: gpt-autotrader
 
 on:
   workflow_dispatch:
+    inputs:
+      phase:
+        description: "Trading phase to run"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - sell
+          - buy
   schedule:
     # 22:35 KST during US daylight saving time
     - cron: "35 13 * * 1-5"
@@ -34,6 +44,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Choose trading phase
+        id: phase
+        run: |
+          phase="${{ github.event.inputs.phase || 'both' }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "35 13 * * 1-5" ]; then
+              phase="sell"
+            elif [ "${{ github.event.schedule }}" = "50 13 * * 1-5" ]; then
+              phase="buy"
+            fi
+          fi
+          echo "phase=$phase" >> "$GITHUB_OUTPUT"
+          echo "Selected phase: $phase"
+
       - name: Run trader
         run: |
-          python -m gpt_autotrader trade --config config.yaml --once
+          python -m gpt_autotrader trade --config config.yaml --once --phase "${{ steps.phase.outputs.phase }}"
