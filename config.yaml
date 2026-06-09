@@ -1,0 +1,241 @@
+# GPT Autotrader config
+# Default is safe: paper account + no order placement.
+paper: true
+place_orders: true
+
+# Selected trading universe: large-cap stocks, ETFs, inverse and leveraged ETFs.
+data_feed: iex
+
+watchlist:
+  - NVDA
+  - GOOGL
+  - AAPL
+  - MSFT
+  - AMZN
+  - AVGO
+  - TSM
+  - TSLA
+  - META
+  - MU
+  - BRK.B
+  - LLY
+  - WMT
+  - AMD
+  - JPM
+  - ORCL
+  - ASML
+  - V
+  - XOM
+  - INTC
+  - JNJ
+  - CSCO
+  - MA
+  - COST
+  - CAT
+  - LRCX
+  - ABBV
+  - ARM
+  - PLTR
+  - BAC
+  - NFLX
+  - CVX
+  - AMAT
+  - UNH
+  - KO
+  - GE
+  - PG
+  - MS
+  - HSBC
+  - HD
+  - GS
+  - MRK
+  - AZN
+  - BABA
+  - IBM
+  - TXN
+  - PM
+  - NVS
+  - DELL
+  - RY
+  - QCOM
+  - GEV
+  - KLAC
+  - SNDK
+  - RTX
+  - TM
+  - WFC
+  - SHEL
+  - LIN
+  - PANW
+  - BHP
+  - AXP
+  - C
+  - MUFG
+  - SAP
+  - APP
+  - TMUS
+  - NVO
+  - ADI
+  - ANET
+  - VZ
+  - STX
+  - MCD
+  - PEP
+  - TTE
+  - TD
+  - CRWD
+  - RIO
+  - WDC
+  - TMO
+  - APH
+  - BA
+  - AMGN
+  - NEE
+  - SAN
+  - MRVL
+  - DIS
+  - T
+  - TJX
+  - BLK
+  - GILD
+  - SCCO
+  - BUD
+  - CRM
+  - UNP
+  - GLW
+  - ETN
+  - SHOP
+  - SCHW
+  - HON
+  - ISRG
+  - PFE
+  - ABT
+  - DE
+  - WELL
+  - UBS
+  - BX
+  - UBER
+  - SMFG
+  - COP
+  - PLD
+  - BTI
+  - SONY
+  - BBVA
+  - BKNG
+  - DHR
+  - NOW
+  - SPGI
+  - UL
+  - LMT
+  - SPY
+  - VOO
+  - IVV
+  - VTI
+  - QQQ
+  - QQQM
+  - DIA
+  - IWM
+  - IJR
+  - IVE
+  - IVW
+  - RSP
+  - SCHD
+  - VYM
+  - DGRO
+  - NOBL
+  - VIG
+  - JEPI
+  - JEPQ
+  - XLK
+  - XLF
+  - XLV
+  - XLE
+  - XLY
+  - XLP
+  - XLI
+  - XLU
+  - XLB
+  - XLRE
+  - XLC
+  - SMH
+  - SOXX
+  - XSD
+  - IGV
+  - HACK
+  - ARKK
+  - BOTZ
+  - IBB
+  - XBI
+  - EFA
+  - EEM
+  - VXUS
+  - VEA
+  - VWO
+  - EWJ
+  - FXI
+  - KWEB
+  - TLT
+  - IEF
+  - SHY
+  - BIL
+  - HYG
+  - LQD
+  - GLD
+  - IAU
+  - SLV
+  - USO
+  - UNG
+  - IBIT
+  - FBTC
+  - TQQQ
+  - SQQQ
+  - QLD
+  - QID
+  - SSO
+  - SDS
+  - UPRO
+  - SPXU
+  - SPXL
+  - SPXS
+  - SOXL
+  - SOXS
+  - TECL
+  - TECS
+  - FAS
+  - FAZ
+  - TNA
+  - TZA
+  - LABU
+  - LABD
+  - EWY
+  - FLKR
+  - KORU
+  - KDEF
+  - DRAM
+  - MKOR
+
+# Strategy: trend-following with RSI filter.
+lookback_days: 260
+fast_sma: 20
+slow_sma: 50
+rsi_period: 14
+rsi_buy_min: 35
+rsi_buy_max: 72
+rsi_sell_below: 45
+
+# Risk controls.
+max_open_positions: 5
+max_position_pct: 0.10          # max 10% of equity per new position
+max_portfolio_exposure_pct: 0.60 # max 60% invested by this bot
+min_trade_notional: 25
+max_daily_loss_pct: 0.02         # stop trading if account equity is down 2% today
+stop_loss_pct: 0.08              # sell if position is down 8% from average entry
+take_profit_pct: 0.25            # sell if position is up 25% from average entry
+cooldown_minutes: 60
+
+# Market schedule guard.
+trade_only_when_market_open: true
+
+# Runtime files.
+state_file: state.json
+log_file: logs/gpt_autotrader.log
